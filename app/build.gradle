@@ -1,0 +1,101 @@
+plugins {
+    id 'application'
+    id 'war'
+    id 'maven-publish'
+    id 'com.diffplug.spotless' version 'latest.release'
+}
+
+dependencies {
+    // Uses
+    implementation name: "spring-gradle-common-template", group: PROJECT_GROUP, version: springGradleSiteTemplateVersion
+    implementation 'org.springframework:spring-webmvc:' + springVersion
+    implementation 'org.thymeleaf:thymeleaf:' + thymeleafVersion
+    implementation 'org.thymeleaf:thymeleaf-spring6:' + thymeleafVersion
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+    // Provided Compile
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+    // Tests
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.slf4j:slf4j-api'
+    testImplementation 'com.h2database:h2:'+ h2Version
+    testImplementation 'org.springframework:spring-test:' + springVersion
+    testImplementation 'org.junit.jupiter:junit-jupiter:' + junitVersion
+}
+
+group = PROJECT_GROUP
+version = PROJECT_VERSION
+
+java {
+    withJavadocJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+application {
+    mainClass = 'com.example.App'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = PROJECT_GROUP
+            artifactId = PROJECT_NAME
+            version = PROJECT_VERSION
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+war {
+    archiveFileName = 'site-template.war'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+javadoc {
+    enabled = true
+    source = sourceSets.main.allJava
+    classpath += configurations.compileClasspath
+    options {
+        encoding = 'UTF-8'
+        title = PROJECT_NAME
+        windowTitle = PROJECT_NAME + ":" + PROJECT_VERSION + "-Javadoc"
+    }
+    failOnError = false
+}
+
+spotless {
+    // ./gradlew spotlessApply	- Format code in place
+    // ./gradlew spotlessCheck  - Check that code is formatted (CI check)
+    java {
+        target 'src/**/*.java'
+        googleJavaFormat()
+        importOrder()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        formatAnnotations()
+    }
+    groovyGradle {
+        target '**/*.gradle'
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    css {
+        target 'src/**/*.css'
+        prettier()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
